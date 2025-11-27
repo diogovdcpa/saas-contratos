@@ -6,3 +6,4 @@
 - [x] Adicionar models User/Contract e inicialização do banco
 - [x] Implementar controllers (auth, dashboard, contratos) com sessões
 - [x] Criar templates Jinja (layout, login/cadastro, dashboard, lista/form contratual, PDF)
+- [x] Ajustar instância do SQLite para ambientes read-only (fallback em /tmp) e remover view duplicada
