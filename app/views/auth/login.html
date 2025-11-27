@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}Login | SaaS Contratos{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-xl rounded-2xl border border-white/10 bg-white/5 px-8 py-10 shadow-2xl shadow-black/30">
+  <div class="mb-6 text-center">
+    <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Acesso</p>
+    <h1 class="mt-2 text-3xl font-semibold text-white">Entrar</h1>
+    <p class="mt-2 text-slate-400">Faça login para acessar sua dashboard e contratos.</p>
+  </div>
+
+  <form method="POST" class="space-y-5">
+    <div>
+      <label class="block text-sm text-slate-300">Email</label>
+      <input name="email" type="email" required class="mt-2 w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-slate-500 focus:border-glow focus:outline-none" placeholder="voce@empresa.com" />
+    </div>
+    <div>
+      <label class="block text-sm text-slate-300">Senha</label>
+      <input name="password" type="password" required class="mt-2 w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-white placeholder:text-slate-500 focus:border-glow focus:outline-none" placeholder="********" />
+    </div>
+    <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-glow via-cyan-400 to-accent px-4 py-3 text-center text-base font-semibold text-night shadow-lg shadow-cyan-500/30 transition hover:brightness-105">
+      Entrar
+    </button>
+  </form>
+
+  <p class="mt-6 text-center text-sm text-slate-300">
+    Ainda não tem conta?
+    <a class="font-semibold text-glow hover:text-cyan-200" href="{{ url_for('auth.register') }}">Criar conta</a>
+  </p>
+</section>
+{% endblock %}
