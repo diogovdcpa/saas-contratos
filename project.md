@@ -72,3 +72,16 @@ main.py                 # entrypoint Vercel importando app
 - Como usuario, depois de preencher o formulario quero salvar o contrato.  
 - Como usuario, ao listar meus contratos quero uma opcao de gerar/imprimir o contrato em PDF.  
 - Como usuario, quero poder editar ou excluir um contrato existente.
+
+## Metodologia Gitflow adotada
+- `main`: branch de produção; recebe merge apenas após validação em `develop`.
+- `develop`: branch de integração contínua; recebe as features finalizadas.
+- `feature/<nome>`: cada demanda nasce de `develop`, recebe commits e depois é mergeada de volta em `develop` via `--no-ff`.
+- Fluxo básico:  
+  1) `git checkout develop && git pull`  
+  2) `git checkout -b feature/nome-da-feature`  
+  3) Commits na feature  
+  4) `git checkout develop && git merge --no-ff feature/nome-da-feature`  
+  5) `git checkout main && git merge --no-ff develop`  
+  6) `git push origin develop main` (ou push separado, conforme governança)  
+- Limpeza: branches de feature podem ser removidas após merge; mantemos apenas `main` e `develop` ativas.
