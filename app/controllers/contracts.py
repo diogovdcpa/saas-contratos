@@ -219,7 +219,10 @@ def contract_pdf(contract_id: int):
         align="C",
     )
 
-    pdf_bytes = pdf.output(dest="S").encode("latin1")
+    pdf_output = pdf.output(dest="S")
+    pdf_bytes = pdf_output.encode("latin1") if isinstance(pdf_output, str) else bytes(
+        pdf_output
+    )
     response = make_response(pdf_bytes)
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = (
