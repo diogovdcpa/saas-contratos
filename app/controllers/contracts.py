@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from io import BytesIO
 
 from fpdf import FPDF
 from flask import (
@@ -20,6 +19,57 @@ from app.controllers import login_required
 from app.models.contract import Contract
 
 contracts_bp = Blueprint("contracts", __name__, url_prefix="/contratos")
+
+UNITS = [
+    "zero",
+    "um",
+    "dois",
+    "três",
+    "quatro",
+    "cinco",
+    "seis",
+    "sete",
+    "oito",
+    "nove",
+]
+TEENS = {
+    10: "dez",
+    11: "onze",
+    12: "doze",
+    13: "treze",
+    14: "quatorze",
+    15: "quinze",
+    16: "dezesseis",
+    17: "dezessete",
+    18: "dezoito",
+    19: "dezenove",
+}
+TENS = {
+    20: "vinte",
+    30: "trinta",
+    40: "quarenta",
+    50: "cinquenta",
+    60: "sessenta",
+    70: "setenta",
+    80: "oitenta",
+    90: "noventa",
+}
+HUNDREDS = {
+    1: "cento",
+    2: "duzentos",
+    3: "trezentos",
+    4: "quatrocentos",
+    5: "quinhentos",
+    6: "seiscentos",
+    7: "setecentos",
+    8: "oitocentos",
+    9: "novecentos",
+}
+SCALES = [
+    (1, "mil", "mil"),
+    (2, "milhão", "milhões"),
+    (3, "bilhão", "bilhões"),
+]
 
 
 def _parse_decimal(value: str) -> Decimal | None:
@@ -51,6 +101,98 @@ def _get_contract_or_404(contract_id: int) -> Contract:
     if not contract:
         abort(404)
     return contract
+
+
+def _format_date_br(date_obj) -> str:
+    return date_obj.strftime("%d/%m/%Y") if date_obj else "—"
+
+
+def _format_currency_br(value: Decimal | None) -> str:
+    amount = (value or Decimal("0")).quantize(Decimal("0.01"))
+    formatted = f"{amount:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    return f"R$ {formatted}"
+
+
+def _tres_digitos_por_extenso(n: int) -> str:
+    if n == 0:
+        return ""
+    if n == 100:
+        return "cem"
+
+    centenas = n // 100
+    dezenas_unidades = n % 100
+    partes = []
+
+    if centenas:
+        partes.append(HUNDREDS[centenas])
+
+    if dezenas_unidades:
+        if dezenas_unidades < 10:
+            partes.append(UNITS[dezenas_unidades])
+        elif dezenas_unidades < 20:
+            partes.append(TEENS[dezenas_unidades])
+        else:
+            dezenas = (dezenas_unidades // 10) * 10
+            unidades = dezenas_unidades % 10
+            if dezenas:
+                partes.append(TENS[dezenas])
+            if unidades:
+                partes.append(UNITS[unidades])
+
+    return " e ".join(partes)
+
+
+def _numero_por_extenso(n: int) -> str:
+    if n == 0:
+        return "zero"
+
+    grupos = []
+    while n > 0:
+        grupos.append(n % 1000)
+        n //= 1000
+
+    partes = []
+    for idx, grupo in enumerate(grupos):
+        if grupo == 0:
+            continue
+        grupo_texto = _tres_digitos_por_extenso(grupo)
+        if idx == 0:
+            partes.append(grupo_texto)
+            continue
+
+        escala = SCALES[idx - 1]
+        singular, plural = escala[1], escala[2]
+
+        if idx == 1 and grupo == 1:
+            partes.append("mil")
+        else:
+            sufixo = singular if grupo == 1 else plural
+            partes.append(f"{grupo_texto} {sufixo}")
+
+    partes = partes[::-1]
+    texto = ""
+    for i, parte in enumerate(partes):
+        if i > 0:
+            sep = " e " if i == len(partes) - 1 else ", "
+            texto += sep
+        texto += parte
+    return texto
+
+
+def _valor_por_extenso(valor: Decimal | None) -> str:
+    quantized = (valor or Decimal("0")).quantize(Decimal("0.01"))
+    inteiro = int(quantized)
+    centavos = int((quantized * 100) % 100)
+
+    inteiro_ext = _numero_por_extenso(inteiro)
+    moeda = "real" if inteiro == 1 else "reais"
+
+    if centavos:
+        centavos_ext = _numero_por_extenso(centavos)
+        centavo_label = "centavo" if centavos == 1 else "centavos"
+        return f"{inteiro_ext} {moeda} e {centavos_ext} {centavo_label}"
+
+    return f"{inteiro_ext} {moeda}"
 
 
 @contracts_bp.route("/")
@@ -193,6 +335,9 @@ def contract_pdf(contract_id: int):
 
     pdf.set_font("Helvetica", size=11)
     pdf.ln(8)
+    valor_formatado = _format_currency_br(contract.value)
+    valor_extenso = _valor_por_extenso(contract.value)
+    vencimento_formatado = _format_date_br(contract.due_date)
     pdf.multi_cell(
         0,
         7,
@@ -202,9 +347,9 @@ def contract_pdf(contract_id: int):
                 f"Contratante: {contract.client_name}",
                 f"Contratado: {contract.provider_name}",
                 f"Cidade: {contract.city}",
-                f"Valor: R$ {contract.value:.2f}",
+                f"Valor: {valor_formatado} ({valor_extenso})",
                 f"Pagamento: {contract.payment_terms}",
-                f"Vencimento: {contract.due_date.isoformat() if contract.due_date else '—'}",
+                f"Vencimento: {vencimento_formatado}",
                 f"Serviço: {contract.service_description}",
             ]
         ),
@@ -274,7 +419,7 @@ def contract_pdf(contract_id: int):
     pdf.cell(
         0,
         7,
-        f"Data: {contract.due_date.isoformat() if contract.due_date else '___/___/____'}",
+        f"Data: {vencimento_formatado if contract.due_date else '___/___/____'}",
         ln=True,
     )
 
