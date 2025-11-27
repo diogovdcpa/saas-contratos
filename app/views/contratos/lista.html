@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block title %}Meus contratos | SaaS Contratos{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between">
+  <div>
+    <p class="text-sm uppercase tracking-[0.2em] text-slate-400">Contratos</p>
+    <h1 class="text-3xl font-semibold text-white">Meus contratos</h1>
+  </div>
+  <a href="{{ url_for('contracts.create_contract') }}" class="rounded-xl bg-gradient-to-r from-glow via-cyan-400 to-accent px-4 py-3 text-sm font-semibold text-night shadow-lg shadow-cyan-500/30 transition hover:brightness-105">
+    Novo contrato
+  </a>
+</div>
+
+<div class="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl shadow-black/30">
+  {% if contracts %}
+    <table class="min-w-full divide-y divide-white/5">
+      <thead class="bg-white/5 text-left text-xs uppercase tracking-wide text-slate-400">
+        <tr>
+          <th class="px-4 py-3">Título</th>
+          <th class="px-4 py-3">Contratante</th>
+          <th class="px-4 py-3">Contratado</th>
+          <th class="px-4 py-3">Valor</th>
+          <th class="px-4 py-3">Status</th>
+          <th class="px-4 py-3 text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/5">
+        {% for contract in contracts %}
+          <tr class="hover:bg-white/5">
+            <td class="px-4 py-3 text-white">{{ contract.title }}</td>
+            <td class="px-4 py-3 text-slate-200">{{ contract.client_name }}</td>
+            <td class="px-4 py-3 text-slate-200">{{ contract.provider_name }}</td>
+            <td class="px-4 py-3 text-slate-100">R$ {{ "%.2f"|format(contract.value) }}</td>
+            <td class="px-4 py-3">
+              <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">{{ contract.status }}</span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap justify-end gap-2 text-sm">
+                <a class="rounded-lg bg-white/10 px-3 py-2 font-semibold text-white hover:bg-white/20" href="{{ url_for('contracts.edit_contract', contract_id=contract.id) }}">Editar</a>
+                <a class="rounded-lg border border-white/20 px-3 py-2 font-semibold text-glow hover:border-glow/60" href="{{ url_for('contracts.contract_pdf', contract_id=contract.id) }}" target="_blank" rel="noopener">PDF</a>
+                <form method="POST" action="{{ url_for('contracts.delete_contract', contract_id=contract.id) }}" onsubmit="return confirm('Deseja remover este contrato?')" class="inline">
+                  <button class="rounded-lg border border-red-400/40 px-3 py-2 font-semibold text-red-200 hover:border-red-300 hover:text-white" type="submit">Excluir</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="px-6 py-8 text-slate-300">
+      Nenhum contrato encontrado. Crie o primeiro agora.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

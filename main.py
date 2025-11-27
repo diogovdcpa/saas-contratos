@@ -1,21 +1,7 @@
-from flask import Flask, render_template
-from endpoints import api_bp
+from app import create_app
+
+app = create_app()
 
 
-app = Flask(
-    __name__,
-    template_folder="view",
-    static_folder="public",
-    static_url_path="",
-)
-
-
-app.register_blueprint(api_bp)
-
-
-@app.get("/")
-def read_root():
-    return render_template(
-        "index.html",
-        message="em breve saas para gerar contrato de prestaçao de serviço",
-    )
+if __name__ == "__main__":
+    app.run(debug=True, port=3000)
