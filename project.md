@@ -64,3 +64,11 @@ main.py                 # entrypoint Vercel importando app
 5) Rotas de CRUD minimo (lista + create) e validacoes basicas.  
 6) Semeadura de dados de exemplo e doc de uso.  
 7) Avaliar migracoes (Alembic) se os modelos forem estabilizados.
+
+## Historias de usuario (MVP)
+- Como usuario, quero poder me cadastrar e fazer login para acessar o sistema.  
+- Como usuario autenticado, ao logar quero cair em uma dashboard principal com opcoes de listar meus contratos e criar novo contrato.  
+- Como usuario, ao clicar em "novo contrato" quero um formulario para inserir dados de prestacao de servico (contratado, contratante, servico, valores, forma de pagamento, cidade, datas etc.).  
+- Como usuario, depois de preencher o formulario quero salvar o contrato.  
+- Como usuario, ao listar meus contratos quero uma opcao de gerar/imprimir o contrato em PDF.  
+- Como usuario, quero poder editar ou excluir um contrato existente.
