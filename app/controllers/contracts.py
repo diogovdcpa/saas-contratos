@@ -186,38 +186,106 @@ def delete_contract(contract_id: int):
 def contract_pdf(contract_id: int):
     contract = _get_contract_or_404(contract_id)
     pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     pdf.set_font("Helvetica", "B", 16)
-    pdf.cell(0, 10, "Contrato de Prestação de Serviço", ln=True, align="C")
+    pdf.cell(0, 10, "CONTRATO DE PRESTAÇÃO DE SERVIÇOS", ln=True, align="C")
 
-    pdf.set_font("Helvetica", size=12)
+    pdf.set_font("Helvetica", size=11)
     pdf.ln(8)
-    rows = [
-        ("Título", contract.title),
-        ("Contratante", contract.client_name),
-        ("Contratado", contract.provider_name),
-        ("Serviço", contract.service_description),
-        ("Valor", f"R$ {contract.value:.2f}"),
-        ("Pagamento", contract.payment_terms),
-        ("Cidade", contract.city),
-        ("Status", contract.status),
-        ("Vencimento", contract.due_date.isoformat() if contract.due_date else "-"),
-    ]
-    for label, value in rows:
-        pdf.set_font("Helvetica", "B", 11)
-        pdf.cell(40, 8, f"{label}:", ln=0)
-        pdf.set_font("Helvetica", size=11)
-        pdf.multi_cell(0, 8, str(value))
-        pdf.ln(1)
-
-    pdf.ln(10)
-    pdf.set_font("Helvetica", size=10)
     pdf.multi_cell(
         0,
-        8,
-        "Gerado automaticamente. Revise o texto antes de assinar.",
-        align="C",
+        7,
+        "\n".join(
+            [
+                f"Título: {contract.title}",
+                f"Contratante: {contract.client_name}",
+                f"Contratado: {contract.provider_name}",
+                f"Cidade: {contract.city}",
+                f"Valor: R$ {contract.value:.2f}",
+                f"Pagamento: {contract.payment_terms}",
+                f"Vencimento: {contract.due_date.isoformat() if contract.due_date else '—'}",
+                f"Serviço: {contract.service_description}",
+            ]
+        ),
     )
+    pdf.ln(4)
+
+    def add_clause(title: str, body: str):
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 8, title, ln=True)
+        pdf.set_font("Helvetica", size=11)
+        pdf.multi_cell(0, 7, body)
+        pdf.ln(2)
+
+    add_clause(
+        "1. Objeto",
+        "O presente contrato tem por objeto a prestação dos serviços acima descritos pelo CONTRATADO ao CONTRATANTE, conforme escopo, prazos e condições aqui estabelecidos.",
+    )
+    add_clause(
+        "2. Vigência e Prazo",
+        "Este contrato tem vigência a partir de sua assinatura. Quando aplicável, o vencimento indicado acima servirá como referência para conclusão, entrega ou renovação, salvo ajuste diferente entre as partes.",
+    )
+    add_clause(
+        "3. Obrigações do Contratado",
+        "Prestar os serviços com diligência e dentro do prazo; manter confidencialidade sobre informações do CONTRATANTE; informar eventuais impedimentos e solicitar materiais ou acessos necessários.",
+    )
+    add_clause(
+        "4. Obrigações do Contratante",
+        "Fornecer informações, materiais e acessos necessários; acompanhar entregas; efetuar os pagamentos nos prazos combinados; aprovar ou solicitar ajustes em tempo razoável.",
+    )
+    add_clause(
+        "5. Pagamento",
+        "O CONTRATANTE pagará ao CONTRATADO o valor ajustado, conforme a forma de pagamento indicada. Juros e correção poderão incidir em caso de atraso, conforme legislação aplicável.",
+    )
+    add_clause(
+        "6. Propriedade Intelectual",
+        "Salvo ajuste em contrário, entregas personalizadas pertencem ao CONTRATANTE após quitação. Ferramentas, métodos e know-how preexistentes permanecem de propriedade do CONTRATADO.",
+    )
+    add_clause(
+        "7. Confidencialidade",
+        "As partes manterão confidenciais quaisquer informações técnicas, comerciais ou estratégicas recebidas durante a execução deste contrato, pelo prazo de 5 anos após o término, salvo por obrigação legal.",
+    )
+    add_clause(
+        "8. Rescisão",
+        "O contrato pode ser rescindido por qualquer parte em caso de descumprimento material não sanado, ou por acordo mútuo. Valores devidos até a data da rescisão permanecem exigíveis.",
+    )
+    add_clause(
+        "9. Responsabilidade",
+        "O CONTRATADO responde pela execução dos serviços conforme boas práticas. Em nenhuma hipótese será responsável por danos indiretos, lucros cessantes ou perda de receita, salvo dolo.",
+    )
+    add_clause(
+        "10. Foro",
+        "As partes elegem o foro da cidade mencionada no cabeçalho para dirimir quaisquer dúvidas oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.",
+    )
+
+    pdf.ln(6)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 8, "Declaração e Assinaturas", ln=True)
+    pdf.set_font("Helvetica", size=11)
+    pdf.multi_cell(
+        0,
+        7,
+        "As partes declaram ter lido e concordado com as cláusulas acima. Este contrato pode ser assinado eletronicamente ou fisicamente em duas vias de igual teor.",
+    )
+
+    pdf.ln(14)
+    pdf.cell(0, 7, f"Cidade: {contract.city}", ln=True)
+    pdf.cell(
+        0,
+        7,
+        f"Data: {contract.due_date.isoformat() if contract.due_date else '___/___/____'}",
+        ln=True,
+    )
+
+    pdf.ln(18)
+    pdf.cell(80, 7, "______________________________", ln=0)
+    pdf.cell(30, 7, "", ln=0)
+    pdf.cell(80, 7, "______________________________", ln=1)
+    pdf.cell(80, 7, f"Contratante: {contract.client_name}", ln=0)
+    pdf.cell(30, 7, "", ln=0)
+    pdf.cell(80, 7, f"Contratado: {contract.provider_name}", ln=1)
+
 
     pdf_output = pdf.output(dest="S")
     pdf_bytes = pdf_output.encode("latin1") if isinstance(pdf_output, str) else bytes(
